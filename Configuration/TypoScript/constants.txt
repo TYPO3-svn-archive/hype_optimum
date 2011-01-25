@@ -1,0 +1,52 @@
+# CORE
+
+plugin.tx_hypeoptimum {
+
+	# GENERAL OPTIONS
+
+	# cat=hype_optimum/enable/e01; type=boolean; label= DISABLE:Disable the whole extension.
+	disable = 0
+
+	# cat=hype_optimum/enable/e02; type=boolean; label= DEBUG:Enable the internal debug mode.
+	debug = 0
+
+	# cat=hype_optimum/enable/e03; type=boolean; label= CLEANUP:Enable the garbage collection of temporary/cached files.
+	cleanup = 1
+
+	# cat=hype_optimum/dims/d01; type=int+; label= CLEANUP PERIOD:Set the period in seconds after which the garbage collection takes effect.
+	cleanup_period = 604800
+
+
+
+	# SCRIPT OPTIONS
+
+	script {
+		disableMinification = 0
+
+		disableConcatenation = 0
+
+		fileNamePrefix = script_
+	}
+
+
+
+	# STYLE OPTIONS
+
+	style {
+		disableMinification = 0
+
+		disableConcatenation = 0
+
+		fileNamePrefix = stylesheet_
+
+		embedImportedStyles = 1
+
+		embedExternalFiles = 1
+
+		rewriteRelativeUrls = 1
+
+		removeCharsetDeclarations = 1
+
+		embedFileSizeLimit = 25600
+	}
+}

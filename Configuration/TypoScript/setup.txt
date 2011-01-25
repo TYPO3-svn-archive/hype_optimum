@@ -1,0 +1,53 @@
+plugin.tx_hypeoptimum {
+
+	# GENERAL OPTIONS
+	disable = {$plugin.tx_hypeoptimum.disable}
+	cleanup = {$plugin.tx_hypeoptimum.cleanup}
+	cleanup_period = {$plugin.tx_hypeoptimum.cleanup_period}
+
+	# SCRIPT OPTIONS
+	script {
+		fileNamePrefix = {$plugin.tx_hypeoptimum.script.fileNamePrefix}
+		cacheExternalFiles = {$plugin.tx_hypeoptimum.style.cacheExternalFiles}
+
+		processor {
+			minify = Tx_HypeOptimum_ScriptProcessor_MinifyScriptProcessor.php
+			minify {
+				removeWhitespace = 1
+				removeComments = 1
+			}
+		}
+	}
+
+	# STYLE OPTIONS
+	style {
+		fileNamePrefix = {$plugin.tx_hypeoptimum.style.fileNamePrefix}
+		cacheExternalFiles = {$plugin.tx_hypeoptimum.style.cacheExternalFiles}
+
+		processor {
+			import = Tx_HypeOptimum_StyleProcessor_ImportStyleProcessor.php
+			import {
+				importDepth = 3
+			}
+
+			normalize = Tx_HypeOptimum_StyleProcessor_NormalizeStyleProcessor.php
+			normalize {
+				unifyLinebreaks = 1
+				removeCharsetDeclarations = 1
+				rewriteRelativeUrls = 1
+			}
+
+			minify = Tx_HypeOptimum_StyleProcessor_MinifyStyleProcessor.php
+			minify {
+				removeWhitespace = 1
+				removeComments = 1
+			}
+
+			embed = Tx_HypeOptimum_StyleProcessor_EmbedStyleProcessor.php
+			embed {
+				embedImages = 1
+				embedFonts = 1
+			}
+		}
+	}
+}
