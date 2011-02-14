@@ -33,25 +33,32 @@ class Tx_HypeOptimum_Utility_Optimizer_ScriptOptimizer extends Tx_HypeOptimum_Ut
 	/**
 	 *
 	 */
-	protected $filters = array();
+	public function optimize($data, $filePath = NULL) {
 
-	/**
-	 *
-	 */
-	public function addFilter(Tx_HypeOptimum_Utility_Optimizer_Filter_FilterInterface $filter) {
-		$this->filters[] = $filter;
+		$filePath = $this->normalizeFilePath($filePath);
+
+		foreach($this->filters as $filter) {
+			$filter->setFilePath($filePath);
+			$data = $filter->process($data);
+		}
+
+		return $data;
 	}
 
 	/**
 	 *
 	 */
-	public function optimize($data) {
+	public function optimizeFile($filePath) {
 
-		foreach($this->filters as $filter) {
-			$data = $filter->process($data);
+		$filePath = $this->normalizeFilePath($filePath);
+
+		if(!$this->cache->has($filePath)) {
+			$this->cache->set($filePath, $this->optimize(file_get_contents($filePath), $filePath));
 		}
 
-		return $data;
+		$this->addProcessedFile($filePath);
+
+		return $this->cache->get($filePath);
 	}
 }
 

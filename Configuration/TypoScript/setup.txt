@@ -21,8 +21,7 @@ plugin.tx_hypeoptimum {
 
 	# STYLE OPTIONS
 	style {
-		fileNamePrefix = {$plugin.tx_hypeoptimum.style.fileNamePrefix}
-		cacheExternalFiles = {$plugin.tx_hypeoptimum.style.cacheExternalFiles}
+		disableConcatenation = {$plugin.tx_hypeoptimum.style.disableConcatenation}
 
 		processor {
 			import = Tx_HypeOptimum_StyleProcessor_ImportStyleProcessor.php

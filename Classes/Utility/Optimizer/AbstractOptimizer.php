@@ -31,8 +31,108 @@
 abstract class Tx_HypeOptimum_Utility_Optimizer_AbstractOptimizer
 	implements Tx_HypeOptimum_Utility_Optimizer_OptimizerInterface, t3lib_singleton {
 
-	abstract public function addFilter(Tx_HypeOptimum_Utility_Optimizer_Filter_FilterInterface $filter);
+	/**
+	 * Holds a stack of filters which gets applied to the styles.
+	 */
+	protected $filters = array();
+
+	/**
+	 * Holds already processed files.
+	 */
+	protected $processedFiles = array();
+
+	/**
+	 * Defines the initial base path for the files.
+	 */
+	protected $basePath;
+
+	/**
+	 *
+	 */
+	protected $cache;
+
+	/**
+	 *
+	 *
+	 */
+	public function __construct() {
+
+		t3lib_cache::initializeCachingFramework();
+
+		try {
+			$this->cache = $GLOBALS['typo3CacheManager']->getCache('tx_hypeoptimum');
+		}catch(Exception $e) {
+			$this->cache = $GLOBALS['typo3CacheFactory']->create(
+				'tx_hypeoptimum',
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hypeoptimum']['frontend'],
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hypeoptimum']['backend'],
+				$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hypeoptimum']['options']
+			);
+		}
+	}
+
+	/**
+	 *
+	 */
+	public function addFilter(Tx_HypeOptimum_Utility_Optimizer_Filter_FilterInterface $filter) {
+		$filter->injectOptimizer($this);
+		//$filter->prepare();
+		array_push($this->filters, $filter);
+	}
+
+	/**
+	 *
+	 */
+	public function addProcessedFile($processedFile) {
+		return array_push($this->processedFiles, $processedFile);
+	}
+
+	/**
+	 *
+	 */
+	public function hasProcessedFile($processedFile) {
+		return in_array($processedFile, $this->processedFiles);
+	}
+
+	/**
+	 *
+	 */
+	public function setBasePath($basePath) {
+		$this->basePath = (string)$basePath;
+	}
+
+	/**
+	 *
+	 */
+	public function getBasePath() {
+		return $this->basePath;
+	}
+
+	/**
+	 *
+	 */
+	public function getCache() {
+		return $this->cache;
+	}
+
+	/**
+	 *
+	 */
+	public function normalizeFilePath($filePath) {
+		return realpath($filePath);
+	}
+
+	/**
+	 *
+	 *
+	 */
 	abstract public function optimize($data);
+
+	/**
+	 *
+	 *
+	 */
+	abstract public function optimizeFile($data);
 }
 
 ?>

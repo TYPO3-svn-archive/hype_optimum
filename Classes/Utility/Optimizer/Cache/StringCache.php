@@ -2,7 +2,7 @@
 /***************************************************************
 *  Copyright notice
 *
-*  (c) 2010 Thomas "Thasmo" Deinhamer <thasmo@gmail.com>
+*  (c) 2011 Thomas "Thasmo" Deinhamer <thasmo@gmail.com>
 *  All rights reserved
 *
 *  This script is part of the TYPO3 project. The TYPO3 project is
@@ -25,12 +25,22 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
+
 /**
  *
  */
-interface Tx_HypeOptimum_Utility_Optimizer_Cache_CacheInterface {
-	public function save($key, $data);
-	public function load($key);
+class Tx_HypeOptimum_Utility_Optimizer_Cache_StringCache extends t3lib_cache_frontend_StringFrontend {
+
+	/**
+	 * Checks the validity of an entry identifier. Returns true if it's valid.
+	 *
+	 * @param string $identifier An identifier to be checked for validity
+	 * @return boolean
+	 * @author Christian Jul Jensen <julle@typo3.org>
+	 */
+	public function isValidEntryIdentifier($identifier) {
+		return file_exists($identifier);
+	}
 }
 
 ?>

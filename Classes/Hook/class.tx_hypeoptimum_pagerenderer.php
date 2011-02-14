@@ -30,14 +30,12 @@ set_include_path(t3lib_extMgm::extPath('hype_optimum', 'Resources/Private/Code/m
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Resources/Private/Code/min/lib/Minify/CSS/Compressor.php'));
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Resources/Private/Code/min/lib/Minify/CSS/UriRewriter.php'));
 
+require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/Cache/HybridCache.php'));
+
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/OptimizerInterface.php'));
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/AbstractOptimizer.php'));
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/ScriptOptimizer.php'));
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/StyleOptimizer.php'));
-
-require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/Cache/CacheInterface.php'));
-require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/Cache/AbstractCache.php'));
-require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/Cache/FileCache.php'));
 
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/Filter/FilterInterface.php'));
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Classes/Utility/Optimizer/Filter/AbstractFilter.php'));
@@ -109,12 +107,17 @@ class tx_hypeoptimum_pagerenderer {
 	/**
 	 * @var array
 	 */
-	private $styleProcessors = array();
+	protected $settings;
 
 	/**
-	 * @var array
+	 * @var Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer
 	 */
-	private $scriptProcessors = array();
+	protected $styleOptimizer;
+
+	/**
+	 * @var Tx_HypeOptimum_Utility_Optimizer_ScriptOptimizer
+	 */
+	protected $scriptOptimizer;
 
 	/**
 	 *
@@ -127,15 +130,17 @@ class tx_hypeoptimum_pagerenderer {
 		# be sure to get realtime file information
 		clearstatcache();
 
-		$this->scriptOptimizer = new Tx_HypeOptimum_Utility_Optimizer_ScriptOptimizer;
-		$this->scriptOptimizer->addFilter(new Tx_HypeOptimum_Utility_Optimizer_Filter_ScriptFilter_MinifyScriptFilter);
-
+		# instantiate style optimizer
 		$this->styleOptimizer = new Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer;
 		$this->styleOptimizer->setBasePath(realpath(PATH_site . 'typo3conf/ext/hype_project/Resources/Public/Media/style'));
 		$this->styleOptimizer->addFilter(new Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_ImportStyleFilter);
 		$this->styleOptimizer->addFilter(new Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_CleanStyleFilter);
 		$this->styleOptimizer->addFilter(new Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_MinifyStyleFilter);
 		$this->styleOptimizer->addFilter(new Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_EmbedStyleFilter);
+
+		# instantiate script optimizer
+		$this->scriptOptimizer = new Tx_HypeOptimum_Utility_Optimizer_ScriptOptimizer;
+		$this->scriptOptimizer->addFilter(new Tx_HypeOptimum_Utility_Optimizer_Filter_ScriptFilter_MinifyScriptFilter);
 	}
 
 	/**
@@ -149,7 +154,7 @@ class tx_hypeoptimum_pagerenderer {
 		}
 
 		# compress inlined scripts
-		// @todo	Implement a cache for inlined scripts
+		// @todo implement a cache for inlined scripts
 		foreach($groups['jsInline'] as $identifier => $options) {
 			$groups['jsInline'][$identifier]['code'] = $this->scriptOptimizer->optimize($options['code']);
 		}
@@ -157,36 +162,22 @@ class tx_hypeoptimum_pagerenderer {
 		# compress libraries
 		foreach($groups['jsLibs'] as $identifier => $options) {
 
-			# external files
-			if(filter_var($options['file'], FILTER_VALIDATE_URL) !== FALSE) {
-				$newGroups[$identifier] = $options;
-				$newGroups[$identifier]['external'] = 1;
-				continue;
-			}
-
 			# skip if configured
 			if(!$options['compress']) {
 				continue;
 			}
 
-			# set current path
-			$currentPath = realpath(PATH_site . $options['file']);
-
-			# determine new path
-			$hash = md5($currentPath . filemtime($currentPath));
-			$newPath = 'typo3temp/' . $this->settings['script.']['fileNamePrefix'] . $hash . '.js';
-
-			# minify new file
-			if(!file_exists($newPath)) {
-				$data = $this->scriptOptimizer->optimize(file_get_contents($currentPath));
-
-				if($data) {
-					t3lib_div::writeFileToTypo3tempDir(PATH_site . $newPath, $data);
-					unset($data);
-				}
+			# external files
+			if(filter_var($options['file'], FILTER_VALIDATE_URL) !== FALSE) {
+				$groups['jsLibs'][$identifier]['external'] = 1;
+				continue;
 			}
 
-			# replace file
+			# set current path
+			$currentPath = realpath(PATH_site . $options['file']);
+			$newPath = $this->scriptOptimizer->optimizeFile($currentPath);
+
+			# add new file
 			if(file_exists($newPath)) {
 				$groups['jsLibs'][$identifier]['file'] = $newPath;
 			}
@@ -196,6 +187,11 @@ class tx_hypeoptimum_pagerenderer {
 		$newGroups = array();
 		foreach($groups['jsFiles'] as $file => $options) {
 
+			# skip if configured
+			if(!$options['compress']) {
+				continue;
+			}
+
 			# external files
 			if(filter_var($file, FILTER_VALIDATE_URL) !== FALSE) {
 				$newGroups[$file] = $options;
@@ -203,27 +199,9 @@ class tx_hypeoptimum_pagerenderer {
 				continue;
 			}
 
-			# skip if configured
-			if(!$options['compress']) {
-				continue;
-			}
-
 			# set current path
 			$currentPath = realpath(PATH_site . $file);
-
-			# determine new path
-			$hash = md5($currentPath . filemtime($currentPath));
-			$newPath = 'typo3temp/' . $this->settings['script.']['fileNamePrefix'] . $hash . '.js';
-
-			# minify new file
-			if(!file_exists($newPath)) {
-				$data = $this->scriptOptimizer->optimize(file_get_contents($currentPath));
-
-				if($data) {
-					t3lib_div::writeFileToTypo3tempDir(PATH_site . $newPath, $data);
-					unset($data);
-				}
-			}
+			$newPath = $this->styleOptimizer->optimizeFile($currentPath);
 
 			# add new file
 			if(file_exists($newPath)) {
@@ -246,7 +224,7 @@ class tx_hypeoptimum_pagerenderer {
 		}
 
 		# compress inlined styles
-		// @todo	Implement a cache for inlined scripts
+		// @todo implement a cache for inlined scripts
 		foreach($groups['cssInline'] as $identifier => $options) {
 
 			# minify file contents
@@ -254,7 +232,6 @@ class tx_hypeoptimum_pagerenderer {
 		}
 
 		# compress files
-		// @todo	Embed external styles (@import)
 		$newGroups = array();
 		foreach($groups['cssFiles'] as $file => $options) {
 
@@ -264,7 +241,7 @@ class tx_hypeoptimum_pagerenderer {
 			}
 
 			# external files
-			if(filter_var($options['file'], FILTER_VALIDATE_URL) !== FALSE) {
+			if(filter_var($file, FILTER_VALIDATE_URL) !== FALSE) {
 				$newGroups[$file] = $options;
 				$newGroups[$file]['external'] = 1;
 				continue;
@@ -272,7 +249,6 @@ class tx_hypeoptimum_pagerenderer {
 
 			# set current path
 			$currentPath = realpath(PATH_site . $file);
-
 			$newPath = $this->styleOptimizer->optimizeFile($currentPath);
 
 			# add new file
@@ -398,10 +374,20 @@ class tx_hypeoptimum_pagerenderer {
 		if(!file_exists($newPath)) {
 
 			# get and prepare file contents
-			// @todo	Beware of inlined media queries and font-face declarations.
+			// @todo beware of inlined media queries
 			$data = NULL;
 			foreach($cache['files'] as $file => $options) {
 				$currentPath = realpath(PATH_site . $file);
+
+				$contents = file_get_contents($currentPath);
+
+				# sniff out font face declarations and stick 'em on top
+				preg_match_all('~\@font-face.?\{.*\}~isU', $contents, $matches);
+
+				if($matches[0]) {
+					$data = implode(chr(10), $matches[0]) . $data;
+				}
+
 				$data .= '@media ' . $options['media'] . ' {' . file_get_contents($currentPath) . '}';
 			}
 
@@ -416,46 +402,6 @@ class tx_hypeoptimum_pagerenderer {
 		if(file_exists($newPath)) {
 			$groups['cssFiles'] = array($newPath => array('rel' => 'stylesheet', 'media' => 'all'));
 		}
-	}
-
-	/**
-	 *
-	 */
-	public function embedStyles($match) {
-
-		$path = realpath(PATH_site . $match[1]);
-
-		if(file_exists($path)) {
-			$data = file_get_contents($path);
-
-			if($match[2]) {
-				$data = '@media ' . $match[2] . ' {' . $data . '}';
-			}
-		} else {
-			$data = $match[0];
-		}
-
-		return $data;
-	}
-
-	/**
-	 *
-	 */
-	public function convertToBase64($match) {
-
-		$path = realpath(PATH_site . $match[1]);
-
-		if(file_exists($path) && filesize($path) < $this->settings['style.']['embedFileSizeLimit'] && !preg_match('~#~', $path)) {
-			// $type = exif_imagetype($path);
-			// $mime = image_type_to_mime_type($type);
-			$mime = mime_content_type($path);
-
-			$data = 'url(data:' . $mime . ';base64,' . base64_encode(file_get_contents($path)) . ')';
-		} else {
-			$data = $match[0];
-		}
-
-		return $data;
 	}
 }
 

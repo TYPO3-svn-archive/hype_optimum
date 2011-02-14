@@ -25,91 +25,10 @@
 *  This copyright notice MUST APPEAR in all copies of the script!
 ***************************************************************/
 
-
 /**
  *
  */
-class Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer
-	extends Tx_HypeOptimum_Utility_Optimizer_AbstractOptimizer {
-
-	/**
-	 * Defines the initial base path for the files.
-	 */
-	protected $basePath;
-
-	/**
-	 * Holds a stack of filters which gets applied to the styles.
-	 */
-	protected $filters = array();
-
-	/**
-	 * Holds already processed files.
-	 */
-	protected $processedFiles = array();
-
-	/**
-	 * Handles caching of processed files.
-	 */
-	protected $cache;
-
-	/**
-	 *
-	 */
-	public function __construct() {
-		$this->cache = new Tx_HypeOptimum_Utility_Optimizer_Cache_FileCache;
-		$this->cache->setStoragePath(PATH_site);
-	}
-
-	/**
-	 *
-	 */
-	public function setBasePath($basePath) {
-		$this->basePath = (string)$basePath;
-	}
-
-	/**
-	 *
-	 */
-	public function getBasePath() {
-		return $this->basePath;
-	}
-
-	/**
-	 *
-	 */
-	public function getCache() {
-		return $this->cache;
-	}
-
-	/**
-	 *
-	 */
-	public function addProcessedFile($processedFile) {
-		return array_push($this->processedFiles, $processedFile);
-	}
-
-	/**
-	 *
-	 */
-	public function hasProcessedFile($processedFile) {
-		return in_array($processedFile, $this->processedFiles);
-	}
-
-	/**
-	 *
-	 */
-	public function addFilter(Tx_HypeOptimum_Utility_Optimizer_Filter_FilterInterface $filter) {
-		$filter->injectOptimizer($this);
-		//$filter->prepare();
-		array_push($this->filters, $filter);
-	}
-
-	/**
-	 *
-	 */
-	public function normalizeFilePath($filePath) {
-		return realpath($filePath);
-	}
+class Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer extends Tx_HypeOptimum_Utility_Optimizer_AbstractOptimizer {
 
 	/**
 	 *
@@ -133,14 +52,13 @@ class Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer
 
 		$filePath = $this->normalizeFilePath($filePath);
 
-		if(($path = $this->cache->load($filePath)) === FALSE) {
-			$data = $this->optimize(file_get_contents($filePath), $filePath);
-			$path = $this->cache->save($filePath, $data);
+		if(!$this->cache->has($filePath)) {
+			$this->cache->set($filePath, $this->optimize(file_get_contents($filePath), $filePath));
 		}
 
 		$this->addProcessedFile($filePath);
 
-		return $path;
+		return $this->cache->get($filePath);
 	}
 }
 

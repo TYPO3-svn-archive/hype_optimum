@@ -16,37 +16,23 @@ plugin.tx_hypeoptimum {
 	# cat=hype_optimum/dims/d01; type=int+; label= CLEANUP PERIOD:Set the period in seconds after which the garbage collection takes effect.
 	cleanup_period = 604800
 
-
-
 	# SCRIPT OPTIONS
 
 	script {
 		disableMinification = 0
-
 		disableConcatenation = 0
-
 		fileNamePrefix = script_
 	}
-
-
 
 	# STYLE OPTIONS
 
 	style {
 		disableMinification = 0
-
-		disableConcatenation = 0
-
-		fileNamePrefix = stylesheet_
-
+		disableConcatenation = 1
 		embedImportedStyles = 1
-
 		embedExternalFiles = 1
-
 		rewriteRelativeUrls = 1
-
 		removeCharsetDeclarations = 1
-
 		embedFileSizeLimit = 25600
 	}
 }
