@@ -33,23 +33,28 @@ abstract class Tx_HypeOptimum_Utility_Optimizer_Filter_AbstractFilter
 	implements Tx_HypeOptimum_Utility_Optimizer_Filter_FilterInterface {
 
 	/**
-	 *
+	 * @var Tx_HypeOptimum_Utility_Optimizer_OptimizerInterface
 	 */
 	protected $optimizer;
 
 	/**
-	 *
+	 * @var string
 	 */
 	protected $filePath;
 
 	/**
+	 * Injects the optimizer
 	 *
+	 * @param Tx_HypeOptimum_Utility_Optimizer_OptimizerInterface $optimizer
+	 * @return void
 	 */
 	public function injectOptimizer(Tx_HypeOptimum_Utility_Optimizer_OptimizerInterface $optimizer) {
 		$this->optimizer = $optimizer;
 	}
 
 	/**
+	 * Returns the optimizer
+	 *
 	 * @return Tx_HypeOptimum_Utility_Optimizer_OptimizerInterface
 	 */
 	public function getOptimizer() {
@@ -57,23 +62,23 @@ abstract class Tx_HypeOptimum_Utility_Optimizer_Filter_AbstractFilter
 	}
 
 	/**
+	 * Sets the file path
 	 *
+	 * @param string $filePath
+	 * @return void
 	 */
 	public function setFilePath($filePath) {
 		$this->filePath = $filePath;
 	}
 
 	/**
+	 * Gets the file path
 	 *
+	 * @return string
 	 */
 	public function getFilePath() {
 		return $this->filePath;
 	}
-
-	/**
-	 *
-	 */
-	public function prepare(){}
 }
 
 ?>

@@ -76,7 +76,6 @@ abstract class Tx_HypeOptimum_Utility_Optimizer_AbstractOptimizer
 	 */
 	public function addFilter(Tx_HypeOptimum_Utility_Optimizer_Filter_FilterInterface $filter) {
 		$filter->injectOptimizer($this);
-		//$filter->prepare();
 		array_push($this->filters, $filter);
 	}
 
