@@ -35,73 +35,13 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clea
 
 
 
-# RTE
-
-t3lib_extMgm::addPageTSConfig('
-RTE {
-	default {
-		classesAnchor = external, external_window, internal, internal_window, file, email
-		classesAnchor.default {
-			page = internal
-			url = external
-			file = file
-			mail = email
-		}
-
-		proc {
-			allowedClasses (
-				external, external_window, internal, internal_window, file, email,
-				align-left, align-center, align-right, align-justify,
-				csc-frame-frame1, csc-frame-frame2,
-				component-items, action-items,
-				component-items-ordered, action-items-ordered,
-				important, name-of-person, detail,
-				indent
-			)
-		}
-	}
-
-	classesAnchor {
-		externalLink {
-			class = external
-			type = url
-			titleText =
-		}
-		externalLinkInNewWindow {
-			class = external external_window
-			type = url
-			titleText =
-		}
-		internalLink {
-			class = internal
-			type = page
-			titleText =
-		}
-		internalLinkInNewWindow {
-			class = internal internal_window
-			type = page
-			titleText =
-		}
-		download {
-			class = file
-			type = file
-			titleText =
-		}
-		mail {
-			class = email
-			type = mail
-			titleText =
-		}
-	}
-}
-');
-
-
-
 # CACHE
+
+# Registration
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheBackends']['Tx_HypeOptimum_Utility_Cache_HybridCache'] = 'typo3conf/ext/hype_optimum/Classes/Utility/Cache/HybridCache.php:Tx_HypeOptimum_Utility_Cache_HybridCache';
 $GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheFrontends']['Tx_HypeOptimum_Utility_Cache_StringCache'] = 'typo3conf/ext/hype_optimum/Classes/Utility/Cache/StringCache.php:Tx_HypeOptimum_Utility_Cache_StringCache';
 
+# Configuration
 if(!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hypeoptimum'])) {
 	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hypeoptimum'] = array(
 		'frontend' => 'Tx_HypeOptimum_Utility_Cache_StringCache',
