@@ -58,6 +58,9 @@ class tx_hypeoptimum_pagerenderer {
 		# retrieve settings
 		$this->settings = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_hypeoptimum.'];
 
+		# load the class autoloader
+		spl_autoload_register(array(t3lib_div::makeInstance('Tx_Extbase_Utility_ClassLoader'), 'loadClass'));
+
 		# be sure to get realtime file information
 		clearstatcache();
 
