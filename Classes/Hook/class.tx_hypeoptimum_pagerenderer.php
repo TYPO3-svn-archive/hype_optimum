@@ -54,6 +54,15 @@ class tx_hypeoptimum_pagerenderer {
 	 *
 	 */
 	public function __construct() {
+		$this->initialize();
+		$this->loadOptimizers();
+	}
+
+	/**
+	 * Initializes settings, class autoloader etc.
+	 * @return void
+	 */
+	protected function initialize() {
 
 		# retrieve settings
 		$this->settings = $GLOBALS['TSFE']->tmpl->setup['plugin.']['tx_hypeoptimum.'];
@@ -63,7 +72,13 @@ class tx_hypeoptimum_pagerenderer {
 
 		# be sure to get realtime file information
 		clearstatcache();
+	}
 
+	/**
+	 * Loads the optimizers and their configured filters
+	 * @return void
+	 */
+	protected function loadOptimizers() {
 		# instantiate style optimizer
 		$this->styleOptimizer = t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer');
 		$this->styleOptimizer->setBasePath(realpath(PATH_site . 'typo3conf/ext/hype_project/Resources/Public/Media/style'));
