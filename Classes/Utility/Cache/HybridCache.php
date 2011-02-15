@@ -29,7 +29,7 @@
 /**
  *
  */
-class Tx_HypeOptimum_Utility_Optimizer_Cache_HybridCache extends t3lib_cache_backend_FileBackend {
+class Tx_HypeOptimum_Utility_Cache_HybridCache extends t3lib_cache_backend_FileBackend {
 
 	/**
 	 * @var t3lib_cache_backend_DbBackend

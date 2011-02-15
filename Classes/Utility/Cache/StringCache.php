@@ -29,7 +29,7 @@
 /**
  *
  */
-class Tx_HypeOptimum_Utility_Optimizer_Cache_StringCache extends t3lib_cache_frontend_StringFrontend {
+class Tx_HypeOptimum_Utility_Cache_StringCache extends t3lib_cache_frontend_StringFrontend {
 
 	/**
 	 * Checks the validity of an entry identifier. Returns true if it's valid.

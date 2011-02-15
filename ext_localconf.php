@@ -99,13 +99,13 @@ RTE {
 
 
 # CACHE
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheBackends']['Tx_HypeOptimum_Utility_Optimizer_Cache_HybridCache'] = 'typo3conf/ext/hype_optimum/Classes/Utility/Optimizer/Cache/HybridCache.php:Tx_HypeOptimum_Utility_Optimizer_Cache_HybridCache';
-$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheFrontends']['Tx_HypeOptimum_Utility_Optimizer_Cache_StringCache'] = 'typo3conf/ext/hype_optimum/Classes/Utility/Optimizer/Cache/StringCache.php:Tx_HypeOptimum_Utility_Optimizer_Cache_StringCache';
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheBackends']['Tx_HypeOptimum_Utility_Cache_HybridCache'] = 'typo3conf/ext/hype_optimum/Classes/Utility/Cache/HybridCache.php:Tx_HypeOptimum_Utility_Cache_HybridCache';
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheFrontends']['Tx_HypeOptimum_Utility_Cache_StringCache'] = 'typo3conf/ext/hype_optimum/Classes/Utility/Cache/StringCache.php:Tx_HypeOptimum_Utility_Cache_StringCache';
 
 if(!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hypeoptimum'])) {
 	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['tx_hypeoptimum'] = array(
-		'frontend' => 'Tx_HypeOptimum_Utility_Optimizer_Cache_StringCache',
-		'backend' => 'Tx_HypeOptimum_Utility_Optimizer_Cache_HybridCache',
+		'frontend' => 'Tx_HypeOptimum_Utility_Cache_StringCache',
+		'backend' => 'Tx_HypeOptimum_Utility_Cache_HybridCache',
 		'options' => array(
 			'cacheTable' => 'tx_hypeoptimum_cache',
 			'tagsTable' => 'tx_hypeoptimum_cache_tag',
