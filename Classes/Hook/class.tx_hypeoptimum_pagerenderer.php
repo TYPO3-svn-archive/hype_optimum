@@ -217,12 +217,12 @@ class tx_hypeoptimum_pagerenderer {
 
 		# concatenate scripts
 		if(!$this->settings['disable'] && !$this->settings['script.']['disableConcatenation']) {
-			$this->concatenateScripts(&$groups, $renderer);
+			$this->concatenateScripts($groups, $renderer);
 		}
 
 		# concatenate styles
 		if(!$this->settings['disable'] && !$this->settings['style.']['disableConcatenation']) {
-			$this->concatenateStyles(&$groups, $renderer);
+			$this->concatenateStyles($groups, $renderer);
 		}
 	}
 
