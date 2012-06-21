@@ -110,8 +110,8 @@ abstract class Tx_HypeOptimum_Utility_Optimizer_AbstractOptimizer
 	/**
 	 *
 	 */
-	public function getCache() {
-		return $this->cache;
+	public function getContentCache() {
+		return $this->contentCache;
 	}
 
 	/**

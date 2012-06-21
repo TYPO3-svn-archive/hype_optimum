@@ -26,47 +26,55 @@
 ***************************************************************/
 
 /**
- *
+ * Clean Style Filter
+ * Cleans the stylesheet removing or manipulating various bits.
  */
 class Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_CleanStyleFilter
 	extends Tx_HypeOptimum_Utility_Optimizer_Filter_AbstractFilter {
 
 	/**
-	 *
+	 * @var boolean Defines if charset declarations should get removed.
 	 */
 	protected $removeCharsetDeclarations = TRUE;
 
 	/**
-	 *
+	 * Sets whether charset declarations should get removed or not.
+	 * @param boolean $removeCharsetDeclarations
+	 * @return void
 	 */
-	public function removeCharsetDeclarations() {
-		$this->removeCharsetDeclarations = TRUE;
+	public function setRemoveCharsetDeclarations($removeCharsetDeclarations) {
+		$this->removeCharsetDeclarations = (boolean)$removeCharsetDeclarations;
 	}
 
 	/**
-	 *
-	 */
-	public function leaveCharsetDeclarations() {
-		$this->removeCharsetDeclarations = FALSE;
-	}
-
-	/**
-	 *
+	 * Gets whether charset declarations should get removed or not.
+	 * @return boolean
 	 */
 	public function getRemoveCharsetDeclarations() {
 		return $this->removeCharsetDeclarations;
 	}
 
 	/**
-	 *
+	 * Processes the cleaning of the stylesheet.
+	 * @param string $data The data to be processed.
+	 * @return string The processed data.
 	 */
 	public function process($data) {
 
 		if($this->getRemoveCharsetDeclarations() === TRUE) {
-			$data = preg_replace('~@charset[ ][\'|"].*[\'|"];~iU', '', $data);
+			$data = $this->removeCharsetDeclarations($data);
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Removes charset declarations of stylesheets.
+	 * @param string The stylesheet contents of which the charset declarations will be removed.
+	 * @return string The stylesheet contents without charset declarations.
+	 */
+	protected function removeCharsetDeclarations($data) {
+		return preg_replace('~@charset[ ][\'|"].*[\'|"];~iU', '', $data);
 	}
 }
 

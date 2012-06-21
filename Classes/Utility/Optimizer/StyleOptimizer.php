@@ -26,22 +26,32 @@
 ***************************************************************/
 
 /**
- *
+ * Style Optimizer
+ * Optimizes stylesheets with the registered style filters.
  */
 class Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer extends Tx_HypeOptimum_Utility_Optimizer_AbstractOptimizer {
 
 	/**
-	 *
+	 * Optimized the given stylesheet data.
+	 * @param string $data
+	 * @param string $filePath
+	 * @return string The optimized stylesheet data.
 	 */
 	public function optimize($data, $filePath = NULL) {
 
+		# normalize the file path
 		$filePath = $this->normalizeFilePath($filePath);
 
+		# apply all filters
 		foreach($this->filters as $filter) {
 			$filter->setFilePath($filePath);
 			$data = $filter->process($data);
 		}
 
+		# versioning of referenced resources
+		$data = preg_replace_callback('~url\([\'|"]([^\)]+)[\'|"]\)~iU', array($this, 'versioning'), $data);
+
+		# return the optimized source
 		return $data;
 	}
 
@@ -50,15 +60,44 @@ class Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer extends Tx_HypeOptimum_Uti
 	 */
 	public function optimizeFile($filePath) {
 
-		$filePath = $this->normalizeFilePath($filePath);
+		$filePath = $this->normalizeFilePath($this->getBasePath() . $filePath);
 
 		if(!$this->cache->has($filePath)) {
-			$this->cache->set($filePath, $this->optimize(file_get_contents($filePath), $filePath));
+			$optimizedFilePath = $this->optimize(file_get_contents($filePath), $filePath);
+			$this->cache->set($filePath, $optimizedFilePath);
 		}
 
 		$this->addProcessedFile($filePath);
 
 		return $this->cache->get($filePath);
+	}
+
+	/**
+	 * Adds versioning information into the file path of referenced resources.
+	 * @param string $match
+	 * @return string
+	 */
+	protected function versioning($match) {
+
+		# determine url and path parts
+		if(filter_var($match[1], FILTER_VALIDATE_URL) !== FALSE) {
+			$url = parse_url($match[1]);
+			$path = pathinfo($url['path']);
+		} else {
+			$url = array();
+			$path = pathinfo($match[1]);
+		}
+
+		# get versionized file path
+		$versionizedFilePath = t3lib_div::createVersionNumberedFilename(implode('/', array($path['dirname'], $path['basename'])));
+
+		# rebuild resource path
+		$definition = (empty($url))
+			? 'url(\'' . $versionizedFilePath . '\')'
+			: 'url(\'' .$url['scheme'] . '://' . $url['host'] . $versionizedFilePath . '\')';
+
+		# return the new definition
+		return $definition;
 	}
 }
 

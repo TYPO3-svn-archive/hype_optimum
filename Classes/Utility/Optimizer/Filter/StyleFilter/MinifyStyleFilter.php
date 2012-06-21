@@ -26,11 +26,17 @@
 ***************************************************************/
 
 /**
- *
+ * Minify Style Filter
+ * Minifies stylesheet contens by removing unneeded whitespace and similar.
  */
 class Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_MinifyStyleFilter
 	extends Tx_HypeOptimum_Utility_Optimizer_Filter_AbstractFilter {
 
+	/**
+	 * Processes the minifying of stylesheets.
+	 * @param string $data The data to be processed.
+	 * @return string The processed data.
+	 */
 	public function process($data) {
 		return Minify_CSS_Compressor::process($data);
 	}

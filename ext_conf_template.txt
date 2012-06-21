@@ -1,0 +1,8 @@
+# cat=basic/links/001; type=string; label = jpegtran path: Absolute path of the jpegtran directory.
+jpegtranPath =
+
+# cat=basic/links/002; type=string; label = pngcrush path: Absolute path of the pngcrush directory.
+pngcrushPath =
+
+# cat=basic/links/002; type=string; label = gifsicle path: Absolute path of the gifsicle directory.
+gifsiclePath =

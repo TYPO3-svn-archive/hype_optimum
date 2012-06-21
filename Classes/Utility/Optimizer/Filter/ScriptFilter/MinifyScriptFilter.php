@@ -26,13 +26,19 @@
 ***************************************************************/
 
 /**
- *
+ * Minify Script Filter
+ * Minifies javascript code by removing unneeded characters.
  */
 class Tx_HypeOptimum_Utility_Optimizer_Filter_ScriptFilter_MinifyScriptFilter
 	extends Tx_HypeOptimum_Utility_Optimizer_Filter_AbstractFilter {
 
+	/**
+	 * Processes the javascript code minification.
+	 * @param string $data Javascript code to minify.
+	 * @return string Minified javascript code.
+	 */
 	public function process($data) {
-		return t3lib_div::minifyJavaScript($data);
+		return JSMinPlus::minify($data);
 	}
 }
 

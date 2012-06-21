@@ -3,15 +3,15 @@ plugin.tx_hypeoptimum {
 	# GENERAL OPTIONS
 	disable = {$plugin.tx_hypeoptimum.disable}
 	cleanup = {$plugin.tx_hypeoptimum.cleanup}
-	cleanup_period = {$plugin.tx_hypeoptimum.cleanup_period}
+	cleanup.period = {$plugin.tx_hypeoptimum.cleanup.period}
 
 	# SCRIPT OPTIONS
 	script {
 		fileNamePrefix = {$plugin.tx_hypeoptimum.script.fileNamePrefix}
 		cacheExternalFiles = {$plugin.tx_hypeoptimum.style.cacheExternalFiles}
 
-		processor {
-			minify = Tx_HypeOptimum_ScriptProcessor_MinifyScriptProcessor.php
+		filter {
+			minify = Tx_HypeOptimum_Utility_Optimizer_Filter_ScriptFilter_MinifyScriptFilter
 			minify {
 				removeWhitespace = 1
 				removeComments = 1
@@ -23,29 +23,34 @@ plugin.tx_hypeoptimum {
 	style {
 		disableConcatenation = {$plugin.tx_hypeoptimum.style.disableConcatenation}
 
-		processor {
-			import = Tx_HypeOptimum_StyleProcessor_ImportStyleProcessor.php
+		filter {
+			import = Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_ImportStyleFilter
 			import {
 				importDepth = 3
 			}
 
-			normalize = Tx_HypeOptimum_StyleProcessor_NormalizeStyleProcessor.php
-			normalize {
+			clean = Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_CleanStyleFilter
+			clean {
 				unifyLinebreaks = 1
 				removeCharsetDeclarations = 1
 				rewriteRelativeUrls = 1
 			}
 
-			minify = Tx_HypeOptimum_StyleProcessor_MinifyStyleProcessor.php
+			minify = Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_MinifyStyleFilter
 			minify {
 				removeWhitespace = 1
 				removeComments = 1
 			}
 
-			embed = Tx_HypeOptimum_StyleProcessor_EmbedStyleProcessor.php
+			embed = Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_EmbedStyleFilter
 			embed {
 				embedImages = 1
 				embedFonts = 1
+			}
+
+			cdn = Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_CdnStyleFilter
+			cdn {
+				
 			}
 		}
 	}

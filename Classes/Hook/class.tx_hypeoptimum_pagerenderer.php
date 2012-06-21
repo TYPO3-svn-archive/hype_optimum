@@ -29,6 +29,7 @@
 set_include_path(t3lib_extMgm::extPath('hype_optimum', 'Resources/Private/Code/min/lib') . PATH_SEPARATOR . get_include_path());
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Resources/Private/Code/min/lib/Minify/CSS/Compressor.php'));
 require_once(t3lib_extMgm::extPath('hype_optimum', 'Resources/Private/Code/min/lib/Minify/CSS/UriRewriter.php'));
+require_once(t3lib_extMgm::extPath('hype_optimum', 'Resources/Private/Code/min/lib/JSMinPlus.php'));
 
 /**
  *
@@ -51,7 +52,7 @@ class tx_hypeoptimum_pagerenderer {
 	protected $scriptOptimizer;
 
 	/**
-	 *
+	 * Initializes the class and the optimizers including all configured filters.
 	 */
 	public function __construct() {
 		$this->initialize();
@@ -70,7 +71,7 @@ class tx_hypeoptimum_pagerenderer {
 		# load the class autoloader
 		spl_autoload_register(array(t3lib_div::makeInstance('Tx_Extbase_Utility_ClassLoader'), 'loadClass'));
 
-		# be sure to get realtime file information
+		# be sure to get accurate file meta data
 		clearstatcache();
 	}
 
@@ -79,16 +80,24 @@ class tx_hypeoptimum_pagerenderer {
 	 * @return void
 	 */
 	protected function loadOptimizers() {
+
 		# instantiate style optimizer
 		$this->styleOptimizer = t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_StyleOptimizer');
-		$this->styleOptimizer->setBasePath(realpath(PATH_site . 'typo3conf/ext/hype_project/Resources/Public/Media/style'));
+		$this->styleOptimizer->setBasePath(PATH_site);
 		$this->styleOptimizer->addFilter(t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_ImportStyleFilter'));
 		$this->styleOptimizer->addFilter(t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_CleanStyleFilter'));
 		$this->styleOptimizer->addFilter(t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_MinifyStyleFilter'));
-		//$this->styleOptimizer->addFilter(t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_EmbedStyleFilter'));
+		$this->styleOptimizer->addFilter(t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_EmbedStyleFilter'));
+
+		# add cdn style filter
+		//$cdnStyleFilter = t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_CdnStyleFilter');
+		//$cdnStyleFilter->addHost('http://cdn1.typo3-4.5', array('png'));
+		//$cdnStyleFilter->addHost('http://cdn2.typo3-4.5', array('gif'));
+		//$this->styleOptimizer->addFilter($cdnStyleFilter);
 
 		# instantiate script optimizer
 		$this->scriptOptimizer = t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_ScriptOptimizer');
+		$this->scriptOptimizer->setBasePath(PATH_site);
 		$this->scriptOptimizer->addFilter(t3lib_div::makeInstance('Tx_HypeOptimum_Utility_Optimizer_Filter_ScriptFilter_MinifyScriptFilter'));
 	}
 
@@ -109,57 +118,69 @@ class tx_hypeoptimum_pagerenderer {
 		}
 
 		# compress libraries
-		foreach($groups['jsLibs'] as $identifier => $options) {
-
-			# skip if configured
-			if(!$options['compress']) {
-				continue;
-			}
-
-			# external files
-			if(filter_var($options['file'], FILTER_VALIDATE_URL) !== FALSE) {
-				$groups['jsLibs'][$identifier]['external'] = 1;
-				continue;
-			}
-
-			# set current path
-			$currentPath = realpath(PATH_site . $options['file']);
-			$newPath = $this->scriptOptimizer->optimizeFile($currentPath);
-
-			# add new file
-			if(file_exists($newPath)) {
-				$groups['jsLibs'][$identifier]['file'] = $newPath;
-			}
-		}
+		$groups['jsLibs'] = $this->compressLibraryScripts($groups['jsLibs']);
 
 		# compress files
-		$newGroups = array();
-		foreach($groups['jsFiles'] as $file => $options) {
+		$groups['jsFiles'] = $this->compressCommonScripts($groups['jsFiles']);
+	}
+
+	/**
+	 *
+	 */
+	public function compressLibraryScripts($files) {
+
+		foreach($files as $identifier => $options) {
 
 			# skip if configured
 			if(!$options['compress']) {
 				continue;
 			}
 
+			# skip external files
+			if(filter_var($options['file'], FILTER_VALIDATE_URL) !== FALSE) {
+				$files[$identifier]['external'] = 1;
+				continue;
+			}
+
+			# compress file contents
+			$files[$identifier]['file'] = $this->scriptOptimizer->optimizeFile($options['file']);
+		}
+
+		return $files;
+	}
+
+	/**
+	 *
+	 */
+	public function compressCommonScripts($files) {
+
+		$newFiles = array();
+		foreach($files as $path => $options) {
+
+			# skip if configured
+			if(!$options['compress']) {
+				$newFiles[$path] = $options;
+				continue;
+			}
+
 			# external files
-			if(filter_var($file, FILTER_VALIDATE_URL) !== FALSE) {
-				$newGroups[$file] = $options;
-				$newGroups[$file]['external'] = 1;
+			if(filter_var($path, FILTER_VALIDATE_URL) !== FALSE) {
+				$newFiles[$path] = $options;
+				$newFiles[$path]['external'] = 1;
 				continue;
 			}
 
 			# set current path
-			$currentPath = realpath(PATH_site . $file);
-			$newPath = $this->styleOptimizer->optimizeFile($currentPath);
+			$newPath = $this->styleOptimizer->optimizeFile($path);
 
 			# add new file
 			if(file_exists($newPath)) {
-				$newGroups[$newPath] = $options;
+				$newFiles[$newPath] = $options;
 			}
 		}
 
-		# replace all files
-		$groups['jsFiles'] = $newGroups;
+		# replace files
+		return $newFiles;
 	}
 
 	/**
@@ -175,39 +196,44 @@ class tx_hypeoptimum_pagerenderer {
 		# compress inlined styles
 		// @todo implement a cache for inlined scripts
 		foreach($groups['cssInline'] as $identifier => $options) {
-
-			# minify file contents
 			$groups['cssInline'][$identifier]['code'] = $this->styleOptimizer->optimize($options['code']);
 		}
 
 		# compress files
-		$newGroups = array();
-		foreach($groups['cssFiles'] as $file => $options) {
+		$groups['cssFiles'] = $this->compressCommonStyles($groups['cssFiles']);
+	}
+
+	/**
+	 *
+	 */
+	public function compressCommonStyles($files) {
+
+		$newFiles = array();
+		foreach($files as $path => $options) {
 
 			# skip if configured
 			if(!$options['compress']) {
+				$newFiles[$path] = $options;
 				continue;
 			}
 
 			# external files
-			if(filter_var($file, FILTER_VALIDATE_URL) !== FALSE) {
-				$newGroups[$file] = $options;
-				$newGroups[$file]['external'] = 1;
+			if(filter_var($path, FILTER_VALIDATE_URL) !== FALSE) {
+				$newFiles[$path] = $options;
+				$newFiles[$path]['external'] = 1;
 				continue;
 			}
 
 			# set current path
-			$currentPath = realpath(PATH_site . $file);
-			$newPath = $this->styleOptimizer->optimizeFile($currentPath);
+			$newPath = $this->styleOptimizer->optimizeFile($path);
 
 			# add new file
 			if(file_exists($newPath)) {
-				$newGroups[$newPath] = $options;
+				$newFiles[$newPath] = $options;
 			}
 		}
 
-		# replace all files
-		$groups['cssFiles'] = $newGroups;
+		return $newFiles;
 	}
 
 	/**

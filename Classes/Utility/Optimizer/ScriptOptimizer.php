@@ -38,7 +38,11 @@ class Tx_HypeOptimum_Utility_Optimizer_ScriptOptimizer extends Tx_HypeOptimum_Ut
 		$filePath = $this->normalizeFilePath($filePath);
 
 		foreach($this->filters as $filter) {
-			$filter->setFilePath($filePath);
+
+			if($filePath) {
+				$filter->setFilePath($filePath);
+			}
+
 			$data = $filter->process($data);
 		}
 
@@ -50,7 +54,7 @@ class Tx_HypeOptimum_Utility_Optimizer_ScriptOptimizer extends Tx_HypeOptimum_Ut
 	 */
 	public function optimizeFile($filePath) {
 
-		$filePath = $this->normalizeFilePath($filePath);
+		$filePath = $this->normalizeFilePath($this->getBasePath() . $filePath);
 
 		if(!$this->cache->has($filePath)) {
 			$this->cache->set($filePath, $this->optimize(file_get_contents($filePath), $filePath));

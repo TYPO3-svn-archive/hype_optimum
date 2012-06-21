@@ -26,44 +26,74 @@
 ***************************************************************/
 
 /**
- *
+ * Import Style Filter
+ * Directly imports external referenced stylsheets into the stylesheet.
  */
 class Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_ImportStyleFilter
 	extends Tx_HypeOptimum_Utility_Optimizer_Filter_AbstractFilter {
 
 	/**
-	 * Holds path history of imported files.
+	 * @var array Holds path history of imported files.
 	 */
 	protected $pathStack = array();
 
 	/**
-	 * Defines the maximum recursion depth for importing files.
+	 * @var integer Defines the maximum recursion depth for importing files.
 	 */
 	protected $recursionDepth = 0;
 
 	/**
-	 *
+	 * @var integer Defines the maximum filesize for a file to be imported.
+	 */
+	protected $maximumFilesize = 102400;
+
+	/**
+	 * Sets the maximum recursion depth for importing files.
+	 * @param integer The maximum recursion depth.
+	 * @return void
 	 */
 	public function setRecursionDepth($recursionDepth) {
-		$this->recursionDepth = $recursionDepth;
+		$this->recursionDepth = (integer)$recursionDepth;
 	}
 
 	/**
-	 *
+	 * Gets the maximum recursion depth for importing files.
+	 * @return integer The maximum recursion depth.
 	 */
 	public function getRecursionDepth() {
 		return $this->recursionDepth;
 	}
 
 	/**
-	 *
+	 * Sets the maximum file size for files to be imported.
+	 * @param integer $maximumFilesize
+	 * @return void
+	 */
+	public function setMaximumFilesize($maximumFilesize) {
+		$this->maximumFilesize = (integer)$maximumFilesize;
+	}
+
+	/**
+	 * Gets the maximum file size for files to be imported.
+	 * @return integer
+	 */
+	public function getMaximumFilesize() {
+		return $this->maximumFilesize;
+	}
+
+	/**
+	 * Processes the importing of stylesheets.
+	 * @param string $data The data to be processed.
+	 * @return string The processed data.
 	 */
 	public function process($data) {
 		return preg_replace_callback('~@import[ ]url\([\'|"]([^\)]+)[\'|"]\)(.*)\;~iU', array($this, 'import'), $data);
 	}
 
 	/**
-	 *
+	 * Embeds files into the given stylesheet contents.
+	 * @param string $match The import definition.
+	 * @return string The processed import definition.
 	 */
 	protected function import($match) {
 
@@ -74,35 +104,31 @@ class Tx_HypeOptimum_Utility_Optimizer_Filter_StyleFilter_ImportStyleFilter
 			$path = pathinfo($this->getFilePath(), PATHINFO_DIRNAME) . DIRECTORY_SEPARATOR . $match[1];
 		}
 
+		# get the real path of the file
 		$filePath = $this->getOptimizer()->normalizeFilePath($path);
 
-		if(file_exists($filePath)) {
-			if($this->getOptimizer()->hasProcessedFile($filePath)) {
+		# set data to the current definition
+		$data = $match[0];
 
-				# @todo Log files which gets called multiple times.
-				$data = '';
-
-			} else {
+		if(file_exists($filePath) && filesize($filePath) < $this->getMaximumFilesize()) {
+			if(!$this->getOptimizer()->hasProcessedFile($filePath)){
 
 				# optimize file
 				$newFilePath = $this->getOptimizer()->optimizeFile($filePath);
 
-				try {
-					$data = file_get_contents($newFilePath);
-				} catch(Exception $e) {
+				# get new file data
+				$fileData = @file_get_contents($newFilePath);
 
+				if($fileData) {
+					$data = $fileData;
+					unset($fileData);
 				}
 
-
+				# set media type if found
 				if($match[2]) {
 					$data = '@media ' . $match[2] . ' {' . $data . '}';
 				}
 			}
-
-		} else {
-
-			# @todo Log missing files.
-			$data = $match[0];
 		}
 
 		return $data;
